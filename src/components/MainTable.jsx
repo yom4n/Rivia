@@ -1,48 +1,107 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { useTable, useSortBy } from 'react-table'
+import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import {
-    TableContainer, 
+    TableContainer,
     Table,
     Thead,
     Tbody,
     Tr,
     Th,
     Td,
-    Flex
+    Flex,
+    Button,
+    Icon
 } from '@chakra-ui/react'
 
+import { COLUMNS } from './columns'
+
 const MainTable = () => {
+
+let ren = 0;
+
+    useEffect(() => {
+        getData();
+        
+    }, [])
+
     const [userList, setUserList] = useState([])
-    const getData = async() => {
+
+
+    const getData = async () => {
         const response = await axios.get('https://jsonplaceholder.typicode.com/users')
         setUserList(response.data)
     }
-    useEffect(() => {
-        getData();
-        console.log(userList)
-    },[])
+
+    const columns = useMemo(() => COLUMNS, [])
+    const data = useMemo(() => userList, [])
+
+
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        rows,
+        prepareRow
+    } = useTable({
+        columns,
+        data
+    }, useSortBy)
+
     
-    const columns = [ "Name", "Username", "Email", "Address", "Phone", "Website", "Company", "Actions"]
+    // console.log(userList)
+
+    const cellStyle = {
+        paddingTop: "0",
+        paddingBottom: "0",
+        paddingInline: "0.5rem"
+    }
     return (
         <TableContainer>
-            <Table >
+            <Table {...getTableProps()} fontSize="sm">
                 <Thead>
-                    <Tr>
-                        {columns.map((title)=> <Th>{title}</Th> )}
-                    </Tr>
+                    {
+                       headerGroups.map((headerGroup) => (
+                            <Tr {...headerGroup.getHeaderGroupProps()}>
+                                {
+                                    headerGroup.headers.map((column) => (
+                                        <Th flexDir="row" p="0.5rem" {...column.getHeaderProps(column.getSortByToggleProps())}>
+                                            {column.render('Header')}
+                                        
+                                                <span>
+                                                    {column.isSorted ? (column.isSortedDesc ? <ChevronDownIcon w="1rem" h="1rem" color="red.500"/> : <ChevronUpIcon w="1rem" h="1rem" color="red.500"/> ): ""}
+                                                </span>
+                                            
+
+                                        </Th>
+                                    ))
+                                }
+                                <Th padding="0.5rem" textAlign="center">Actions</Th>
+
+                            </Tr>
+                        ))
+                    }
                 </Thead>
-                <Tbody>
-                    {userList.map((user)=>(
-                        <Tr>
-                            <Td> {user.name} </Td>
-                            <Td> {user.username} </Td>
-                            <Td> {user.email} </Td>
-                            <Td> {user.address.city} </Td>
-                            <Td> {user.phone} </Td>
-                            <Td> {user.website} </Td>
-                            <Td> {user.company.name} </Td>
-                        </Tr>
-                    ))}
+                <Tbody {...getTableBodyProps()}>
+                    {
+                        rows.map((row) => {
+                            prepareRow(row);
+                            return (
+                                <Tr {...row.getRowProps()}>
+                                    {row.cells.map((cell) => (
+                                        <Td {...cell.getCellProps()} sx={cellStyle} > {cell.render('Cell')} </Td>
+                                    ))}
+                                    <Td sx={cellStyle}>
+                                        <Flex gap="0.2rem" mt="0.2rem">
+                                            <Button paddingInline="2.2rem">Open</Button>
+                                            <Button paddingInline="1.5rem">Delete</Button>
+                                        </Flex>
+                                    </Td>
+                                </Tr>
+                            )
+                        })
+                    }
                 </Tbody>
             </Table>
         </TableContainer>
