@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useTable, useSortBy } from 'react-table'
+import { useTable, useSortBy, usePagination } from 'react-table'
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import axios from 'axios'
 import {
@@ -18,8 +18,6 @@ import {
 import { COLUMNS } from './columns'
 
 const MainTable = () => {
-
-let ren = 0;
 
     useEffect(() => {
         getData();
@@ -42,15 +40,26 @@ let ren = 0;
         getTableProps,
         getTableBodyProps,
         headerGroups,
-        rows,
+        page,
+        nextPage,
+        previousPage,
+        canNextPage,
+        canPreviousPage,
         prepareRow
     } = useTable({
         columns,
         data
-    }, useSortBy)
+    }, useSortBy, usePagination)
 
     
     // console.log(userList)
+
+    const removeRow = (row) => {
+    //     let DATA = data
+    //     console.log(DATA[row.index])
+    //     DATA.splice(row.index, 1)
+    //     setUserList({DATA})
+    }
 
     const cellStyle = {
         paddingTop: "0",
@@ -58,6 +67,7 @@ let ren = 0;
         paddingInline: "0.5rem"
     }
     return (
+        <Flex flexDir="column">
         <TableContainer>
             <Table {...getTableProps()} fontSize="sm">
                 <Thead>
@@ -85,8 +95,8 @@ let ren = 0;
                 </Thead>
                 <Tbody {...getTableBodyProps()}>
                     {
-                        rows.map((row) => {
-                            prepareRow(row);
+                        page.map((row) => {
+                            prepareRow(row)
                             return (
                                 <Tr {...row.getRowProps()}>
                                     {row.cells.map((cell) => (
@@ -95,7 +105,7 @@ let ren = 0;
                                     <Td sx={cellStyle}>
                                         <Flex gap="0.2rem" mt="0.2rem">
                                             <Button paddingInline="2.2rem">Open</Button>
-                                            <Button paddingInline="1.5rem">Delete</Button>
+                                            <Button onClick={ removeRow(row) } paddingInline="1.5rem">Delete</Button>
                                         </Flex>
                                     </Td>
                                 </Tr>
@@ -104,7 +114,15 @@ let ren = 0;
                     }
                 </Tbody>
             </Table>
+            
         </TableContainer>
+        <Flex justify="center" p="1rem" gap="1rem">
+            <Button onClick={() => previousPage() } disabled={!canNextPage}> Previous </Button>
+            <Button onClick={() => nextPage() } disabled={!canPreviousPage}> Next </Button>
+        </Flex>
+        </Flex>
+
+        
     )
 }
 
